@@ -3,15 +3,16 @@ const { StringSession } = require("telegram/sessions");
 const { NewMessage } = require("telegram/events");
 const input = require("input");
 
-// ===== НАСТРОЙКИ =====
 const API_ID = 30040757;
-const API_HASH = "af60d8abc48971095d979e94226153a8";
+const API_HASH = "ТВОЙ_API_HASH";
 
-const AUTO_REPLY_MESSAGE = "Привет я Сейчас недоступен напишу чуть позже";
-// =====================
+// Для Railway
+const SESSION_STRING = process.env.SESSION_STRING || "";
+
+const AUTO_REPLY_MESSAGE = "Привет, я сейчас недоступен, напишу чуть позже";
 
 const alreadyReplied = new Set();
-const stringSession = new StringSession("");
+const stringSession = new StringSession(SESSION_STRING);
 
 (async () => {
   const client = new TelegramClient(stringSession, API_ID, API_HASH, {
@@ -27,8 +28,10 @@ const stringSession = new StringSession("");
     onError: (err) => console.log("Ошибка:", err),
   });
 
+  console.log("SESSION_STRING:");
+  console.log(client.session.save());
+
   console.log("✅ Юзербот запущен! Теперь он будет отвечать за тебя.");
-  console.log("Чтобы остановить — нажми Ctrl+C");
 
   const me = await client.getMe();
 
@@ -41,7 +44,6 @@ const stringSession = new StringSession("");
       const senderId = message.peerId.userId.toString();
 
       if (senderId === me.id.toString()) return;
-
       if (alreadyReplied.has(senderId)) return;
 
       try {
@@ -51,9 +53,11 @@ const stringSession = new StringSession("");
         alreadyReplied.add(senderId);
 
         await new Promise((r) => setTimeout(r, 1000));
-        await client.sendMessage(senderId, { message: AUTO_REPLY_MESSAGE });
+        await client.sendMessage(senderId, {
+          message: AUTO_REPLY_MESSAGE,
+        });
 
-        console.log(`✉️  Ответил: ${sender.firstName} (id: ${senderId})`);
+        console.log(`Ответил: ${sender.firstName} (${senderId})`);
       } catch (e) {
         console.log("Ошибка при ответе:", e.message);
       }
